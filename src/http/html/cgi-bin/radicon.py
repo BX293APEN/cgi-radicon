@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #coding:utf-8
-import pigpio, cgi, cgitb, os
-cgitb.enable()
+import pigpio, os, sys
+from urllib import parse
 
 class RadioControlCar():
     def control(self, key):
@@ -100,8 +100,20 @@ class RadioControlCar():
     def __exit__(self, *args):
         self.gpio.stop()
             
-if __name__ == "__main__":
-    with RadioControlCar() as rcc:
-        form = cgi.FieldStorage()
-        key = form.getvalue("direction", default="")
-        rcc.control(key)
+    def get_form_value(self): 
+        method = os.environ.get("REQUEST_METHOD", "GET") 
+        if method == "GET": 
+            qs = os.environ.get("QUERY_STRING", "") 
+            params = parse.parse_qs(qs) 
+            return params.get("direction", [""])[0] 
+        elif method == "POST": 
+            length = int(os.environ.get("CONTENT_LENGTH", 0)) 
+            body = sys.stdin.read(length) 
+            params = parse.parse_qs(body) 
+            return params.get("direction", [""])[0] 
+        else:
+            return "" 
+    
+if __name__ == "__main__": 
+    with RadioControlCar() as rcc: 
+        rcc.control(rcc.get_form_value())
