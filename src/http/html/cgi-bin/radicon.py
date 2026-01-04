@@ -32,6 +32,23 @@ class cgi:
     ):
         return self.getlist(formName, default)[0]
 
+class cgitb:
+    def __init__(
+        self, 
+        logdir      = sys.stderr
+    ):
+        self.logdir = logdir
+
+    def handler(
+        self, 
+        message, 
+        logdir      = None
+    ):
+        if logdir is None:
+            print(message, file = self.logdir)
+        else:
+            print(message, file = logdir)
+
 class _GPIO:
     OUTPUT                  = 0 
 
@@ -162,11 +179,9 @@ class RadioControlCar():
 
 
 if __name__ == "__main__": 
-    form = cgi()
+    form    = cgi()
+    log     = cgitb()
     with RadioControlCar() as rcc: 
-        rcc.control(
-            form.getvalue(
-                "direction", 
-                default = ""
-            )
-        )
+        key     = form.getvalue("direction", default = "")
+        log.handler(f"{key}が押されました")
+        rcc.control(key)
