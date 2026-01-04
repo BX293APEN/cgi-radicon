@@ -135,11 +135,8 @@ class RadioControlCar():
             
         if self.PIGPIO_AVAILABLE: # self.gpioにアクセスするためのインスタンスを作成します
             self.pigpio             = pigpio
-            self.gpio               = pigpio.pi() 
         else: 
             self.pigpio             = _GPIO
-            self.gpio               = _GPIO().pi()
-
 
         self.leftGPIO1              = 24
         self.leftGPIO2              = 18
@@ -148,6 +145,7 @@ class RadioControlCar():
         self.leftLED                = 20
         self.rightLED               = 21
         self.html                   = html
+        self.gpio                   = self.pigpio.pi() 
         
         self.gpio.set_mode(self.leftGPIO1, self.pigpio.OUTPUT)
         self.gpio.set_mode(self.leftGPIO2, self.pigpio.OUTPUT)
