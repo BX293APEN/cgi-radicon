@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #coding:utf-8
-import os, sys
+import os, sys, io
 from urllib import parse
 
 class cgi:
@@ -44,10 +44,27 @@ class cgitb:
         message, 
         logdir      = None
     ):
+        
+
         if logdir is None:
-            print(message, file = self.logdir)
+            print(message, file = self.io_set(self.logdir))
         else:
-            print(message, file = logdir)
+            
+            print(message, file = self.io_set(logdir))
+    
+    def io_set(self, logdir):
+        if os.name == "nt": 
+            if logdir is sys.stderr:
+                sys.stderr = io.TextIOWrapper(
+                    sys.stderr.buffer, 
+                    encoding="UTF-8", 
+                    errors="replace",
+                    newline="\n"
+                )
+                return sys.stderr
+        
+        return logdir
+
 
 class _GPIO:
     OUTPUT                  = 0 
