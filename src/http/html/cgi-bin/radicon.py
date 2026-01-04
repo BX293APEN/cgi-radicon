@@ -33,8 +33,7 @@ class cgi:
         return self.getlist(formName, default)[0]
 
 class _GPIO:
-    def __init__(self):
-        self.OUTPUT         = 0 
+    OUTPUT                  = 0 
 
     class pi:
         def __init__(self):
@@ -138,7 +137,7 @@ class RadioControlCar():
             self.pigpio             = pigpio
             self.gpio               = pigpio.pi() 
         else: 
-            self.pigpio             = _GPIO()
+            self.pigpio             = _GPIO
             self.gpio               = _GPIO().pi()
 
 
