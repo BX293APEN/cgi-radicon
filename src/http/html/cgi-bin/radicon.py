@@ -49,22 +49,8 @@ class RadioControlCar():
             self.gpio.write(self.rightLED, 0)
 
 
-    def __init__(self):
-        self.leftGPIO1 = 24
-        self.leftGPIO2 = 18
-        self.rightGPIO1 = 4
-        self.rightGPIO2 = 23
-        self.leftLED = 20
-        self.rightLED = 21
-        self.gpio = pigpio.pi() #self.gpioにアクセスするためのインスタンスを作成します
-
-        self.gpio.set_mode(self.leftGPIO1, pigpio.OUTPUT)
-        self.gpio.set_mode(self.leftGPIO2, pigpio.OUTPUT)
-        self.gpio.set_mode(self.rightGPIO1, pigpio.OUTPUT)
-        self.gpio.set_mode(self.rightGPIO2, pigpio.OUTPUT)
-    
-    def __enter__(self, *args):
-        print("Content-Type: text/html\n")
+    def __init__(
+        self,
         html = """
 <!DOCTYPE html>
 <html lang="ja">
@@ -95,25 +81,61 @@ class RadioControlCar():
     </style>
 </html>
 """
-        print(html)
+    ):
+        self.leftGPIO1          = 24
+        self.leftGPIO2          = 18
+        self.rightGPIO1         = 4
+        self.rightGPIO2         = 23
+        self.leftLED            = 20
+        self.rightLED           = 21
+        self.html               = html
+        self.gpio               = pigpio.pi() # self.gpioにアクセスするためのインスタンスを作成します
+
+        self.gpio.set_mode(self.leftGPIO1, pigpio.OUTPUT)
+        self.gpio.set_mode(self.leftGPIO2, pigpio.OUTPUT)
+        self.gpio.set_mode(self.rightGPIO1, pigpio.OUTPUT)
+        self.gpio.set_mode(self.rightGPIO2, pigpio.OUTPUT)
+    
+    def __enter__(self, *args):
+        print("Content-Type: text/html\n")
+        print(self.html)
         return self
+    
     def __exit__(self, *args):
         self.gpio.stop()
-            
-    def get_form_value(self): 
-        method = os.environ.get("REQUEST_METHOD", "GET") 
-        if method == "GET": 
-            qs = os.environ.get("QUERY_STRING", "") 
-            params = parse.parse_qs(qs) 
-            return params.get("direction", [""])[0] 
-        elif method == "POST": 
-            length = int(os.environ.get("CONTENT_LENGTH", 0)) 
-            body = sys.stdin.read(length) 
-            params = parse.parse_qs(body) 
-            return params.get("direction", [""])[0] 
+
+
+class cgi:
+    def __init__(self):
+        self.method         = os.environ.get("REQUEST_METHOD", "GET")
+        if self.method      == "GET": 
+            self.query      = os.environ.get("QUERY_STRING", "")            # GET : URL の ? 以降が QUERY_STRING に入る
+            self.params     = parse.parse_qs(self.query)                    # URL クエリ形式の文字列を辞書形式に変換
+
+        elif self.method    == "POST": 
+            length          = int(os.environ.get("CONTENT_LENGTH", 0))      # POST データの長さ(バイト数)を環境変数 CONTENT_LENGTH から取得
+            self.query      = sys.stdin.read(length)                        # 標準入力(stdin)から length バイト分URLクエリ形式の文字列を読み込み
+            self.params     = parse.parse_qs(self.query)                    # URL クエリ形式の文字列を辞書形式に変換
         else:
-            return "" 
+            self.query      = ""
+            self.params     = dict()
     
+    def getlist(
+        self,
+        formName    = "direction",
+        default     = ""
+    ):
+        return self.params.get(formName, [default])
+    
+    def getvalue(
+        self,
+        formName    = "direction",
+        default     = ""
+    ):
+        return self.getlist(formName, default)[0]
+
+
 if __name__ == "__main__": 
+    form = cgi()
     with RadioControlCar() as rcc: 
-        rcc.control(rcc.get_form_value())
+        rcc.control(form.getvalue())
