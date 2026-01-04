@@ -36,14 +36,18 @@ class _GPIO:
     def __init__(self):
         self.OUTPUT         = 0 
 
-    def write(self, pin, value): 
-        pass 
+    class pi:
+        def __init__(self):
+            pass
 
-    def set_mode(self, pin, mode): 
-        pass
+        def write(self, pin, value): 
+            pass 
 
-    def stop(self): 
-        pass
+        def set_mode(self, pin, mode): 
+            pass
+
+        def stop(self): 
+            pass
 
 class RadioControlCar():
     def control(self, key):
@@ -131,9 +135,12 @@ class RadioControlCar():
             self.PIGPIO_AVAILABLE   = False
             
         if self.PIGPIO_AVAILABLE: # self.gpioにアクセスするためのインスタンスを作成します
-            self.gpio = pigpio.pi() 
+            self.pigpio             = pigpio
+            self.gpio               = pigpio.pi() 
         else: 
-            self.gpio = _GPIO()
+            self.pigpio             = _GPIO()
+            self.gpio               = _GPIO().pi()
+
 
         self.leftGPIO1              = 24
         self.leftGPIO2              = 18
@@ -143,10 +150,10 @@ class RadioControlCar():
         self.rightLED               = 21
         self.html                   = html
         
-        self.gpio.set_mode(self.leftGPIO1, self.gpio.OUTPUT)
-        self.gpio.set_mode(self.leftGPIO2, self.gpio.OUTPUT)
-        self.gpio.set_mode(self.rightGPIO1, self.gpio.OUTPUT)
-        self.gpio.set_mode(self.rightGPIO2, self.gpio.OUTPUT)
+        self.gpio.set_mode(self.leftGPIO1, self.pigpio.OUTPUT)
+        self.gpio.set_mode(self.leftGPIO2, self.pigpio.OUTPUT)
+        self.gpio.set_mode(self.rightGPIO1, self.pigpio.OUTPUT)
+        self.gpio.set_mode(self.rightGPIO2, self.pigpio.OUTPUT)
     
     def __enter__(self, *args):
         print("Content-Type: text/html\n")
