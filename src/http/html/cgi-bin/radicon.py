@@ -1,72 +1,6 @@
 #!/usr/bin/env python3
 #coding:utf-8
-import os, sys, io
-from urllib import parse
-
-class cgi:
-    def __init__(self):
-        self.method         = os.environ.get("REQUEST_METHOD", "GET")
-        if self.method      == "GET": 
-            self.query      = os.environ.get("QUERY_STRING", "")            # GET : URL の ? 以降が QUERY_STRING に入る
-            self.params     = parse.parse_qs(self.query)                    # URL クエリ形式の文字列を辞書形式に変換
-
-        elif self.method    == "POST": 
-            length          = int(os.environ.get("CONTENT_LENGTH", 0))      # POST データの長さ(バイト数)を環境変数 CONTENT_LENGTH から取得
-            self.query      = sys.stdin.read(length)                        # 標準入力(stdin)から length バイト分URLクエリ形式の文字列を読み込み
-            self.params     = parse.parse_qs(self.query)                    # URL クエリ形式の文字列を辞書形式に変換
-        else:
-            self.query      = ""
-            self.params     = dict()
-    
-    def getlist(
-        self,
-        formName            = "formName",
-        default             = ""
-    ):
-        return self.params.get(formName, [default])
-    
-    def getvalue(
-        self,
-        formName            = "formName",
-        default             = ""
-    ):
-        return self.getlist(formName, default)[0]
-
-class cgitb:
-    def __init__(
-        self, 
-        logdir      = sys.stderr
-    ):
-        self.logdir = logdir
-
-    def handler(
-        self, 
-        message, 
-        logdir      = None
-    ):
-        
-
-        if logdir is None:
-            print(message, file = self.io_set(self.logdir))
-        else:
-            
-            print(message, file = self.io_set(logdir))
-    
-    def io_set(self, logdir):
-        if os.name == "nt": 
-            if logdir is sys.stderr:
-                if isinstance(sys.stderr, io.TextIOWrapper): 
-                    return sys.stderr
-                sys.stderr = io.TextIOWrapper(
-                    sys.stderr.buffer, 
-                    encoding="UTF-8", 
-                    errors="replace",
-                    newline="\n"
-                )
-                return sys.stderr
-        
-        return logdir
-
+import cgi, cgitb
 
 class _GPIO:
     OUTPUT                  = 0 
@@ -198,8 +132,8 @@ class RadioControlCar():
 
 
 if __name__ == "__main__": 
-    form    = cgi()
-    log     = cgitb()
+    form    = cgi.FieldStorage()
+    log     = cgitb.enable()
     with RadioControlCar() as rcc: 
         key     = form.getvalue("direction", default = "")
         log.handler(f"{key}が押されました")
