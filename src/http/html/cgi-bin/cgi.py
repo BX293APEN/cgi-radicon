@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, re
 from urllib import parse
 
 class FieldStorage:
@@ -10,11 +10,66 @@ class FieldStorage:
 
         elif self.method    == "POST": 
             length          = int(os.environ.get("CONTENT_LENGTH", 0))      # POST データの長さ(バイト数)を環境変数 CONTENT_LENGTH から取得
-            self.query      = sys.stdin.read(length)                        # 標準入力(stdin)から length バイト分URLクエリ形式の文字列を読み込み
-            self.params     = parse.parse_qs(self.query)                    # URL クエリ形式の文字列を辞書形式に変換
+            raw             = sys.stdin.buffer.read(length)
+            contentType= os.environ.get("CONTENT_TYPE", "")
+
+            if contentType.startswith("multipart/form-data"): 
+                boundary            = None 
+                for part in contentType.split(";"): 
+                    part            = part.strip() 
+                    if part.startswith("boundary="): 
+                        boundary    = part.split("=", 1)[1].encode() 
+                self.params = self.parse_mp(raw, boundary) 
+            else: 
+                self.query  = raw.decode("UTF-8", "replace") 
+                self.params = parse.parse_qs(self.query)                    # URL クエリ形式の文字列を辞書形式に変換
         else:
             self.query      = ""
             self.params     = dict()
+
+        
+    def parse_mp(self, raw, boundary): 
+        result                      = {} 
+        parts                       = raw.split(b"--" + boundary) 
+        for part in parts: 
+            part                    = part.strip() 
+            if part in (b"", b"--"):
+                continue 
+            
+            # 余計な改行を吸収 
+            header, _, body         = part.lstrip(b"\r\n").partition(b"\r\n\r\n") 
+            body                    = body.rstrip(b"\r\n") 
+            headers                 = header.decode("UTF-8", "replace").split("\r\n") 
+            name                    = None 
+            filename                = None 
+            for h in headers: 
+                h_low               = h.lower() 
+                if h_low.startswith("content-disposition"): 
+                    # name="xxx" 
+                    m               = re.search(r'name="([^"]+)"', h) 
+                    if m: 
+                        name        = m.group(1) 
+                        
+                    # filename="xxx" 
+                    m               = re.search(r'filename="([^"]+)"', h) 
+                    if m: 
+                        filename    = m.group(1) 
+                            
+            if name is None: 
+                continue 
+
+            if filename and filename != "":
+                result.setdefault(name, []).append(
+                    { 
+                        "filename": filename, 
+                        "content": body 
+                    }
+                ) 
+            else: 
+                result.setdefault(name, []).append( 
+                    body.decode("UTF-8", "replace") 
+                ) 
+        return result
     
     def getlist(
         self,
