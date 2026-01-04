@@ -3,6 +3,7 @@ from urllib import parse
 
 class FieldStorage:
     def __init__(self):
+        self.encoding       = "UTF-8"
         self.method         = os.environ.get("REQUEST_METHOD", "GET")
         if self.method      == "GET": 
             self.query      = os.environ.get("QUERY_STRING", "")            # GET : URL の ? 以降が QUERY_STRING に入る
@@ -21,7 +22,7 @@ class FieldStorage:
                         boundary    = part.split("=", 1)[1].encode() 
                 self.params = self.parse_mp(raw, boundary) 
             else: 
-                self.query  = raw.decode("UTF-8", "replace") 
+                self.query  = raw.decode(self.encoding, "replace") 
                 self.params = parse.parse_qs(self.query)                    # URL クエリ形式の文字列を辞書形式に変換
         else:
             self.query      = ""
@@ -39,7 +40,7 @@ class FieldStorage:
             # 余計な改行を吸収 
             header, _, body         = part.lstrip(b"\r\n").partition(b"\r\n\r\n") 
             body                    = body.rstrip(b"\r\n") 
-            headers                 = header.decode("UTF-8", "replace").split("\r\n") 
+            headers                 = header.decode(self.encoding, "replace").split("\r\n") 
             name                    = None 
             filename                = None 
             for h in headers: 
@@ -67,7 +68,7 @@ class FieldStorage:
                 ) 
             else: 
                 result.setdefault(name, []).append( 
-                    body.decode("UTF-8", "replace") 
+                    body.decode(self.encoding, "replace") 
                 ) 
         return result
     
