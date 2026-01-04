@@ -20,14 +20,14 @@ class cgi:
     
     def getlist(
         self,
-        formName    = "direction",
+        formName    = "formName",
         default     = ""
     ):
         return self.params.get(formName, [default])
     
     def getvalue(
         self,
-        formName    = "direction",
+        formName    = "formName",
         default     = ""
     ):
         return self.getlist(formName, default)[0]
@@ -160,4 +160,4 @@ class RadioControlCar():
 if __name__ == "__main__": 
     form = cgi()
     with RadioControlCar() as rcc: 
-        rcc.control(form.getvalue())
+        rcc.control(form.getvalue("direction", default = ""))
