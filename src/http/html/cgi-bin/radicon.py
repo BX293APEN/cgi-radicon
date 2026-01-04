@@ -1,7 +1,49 @@
 #!/usr/bin/env python3
 #coding:utf-8
-import pigpio, os, sys
+import os, sys
 from urllib import parse
+
+class cgi:
+    def __init__(self):
+        self.method         = os.environ.get("REQUEST_METHOD", "GET")
+        if self.method      == "GET": 
+            self.query      = os.environ.get("QUERY_STRING", "")            # GET : URL の ? 以降が QUERY_STRING に入る
+            self.params     = parse.parse_qs(self.query)                    # URL クエリ形式の文字列を辞書形式に変換
+
+        elif self.method    == "POST": 
+            length          = int(os.environ.get("CONTENT_LENGTH", 0))      # POST データの長さ(バイト数)を環境変数 CONTENT_LENGTH から取得
+            self.query      = sys.stdin.read(length)                        # 標準入力(stdin)から length バイト分URLクエリ形式の文字列を読み込み
+            self.params     = parse.parse_qs(self.query)                    # URL クエリ形式の文字列を辞書形式に変換
+        else:
+            self.query      = ""
+            self.params     = dict()
+    
+    def getlist(
+        self,
+        formName    = "direction",
+        default     = ""
+    ):
+        return self.params.get(formName, [default])
+    
+    def getvalue(
+        self,
+        formName    = "direction",
+        default     = ""
+    ):
+        return self.getlist(formName, default)[0]
+
+class _GPIO:
+    def __init__(self):
+        self.OUTPUT = 0 
+
+    def write(self, pin, value): 
+        pass 
+
+    def set_mode(self, pin, mode): 
+        pass
+
+    def stop(self): 
+        pass
 
 class RadioControlCar():
     def control(self, key):
@@ -82,6 +124,17 @@ class RadioControlCar():
 </html>
 """
     ):
+        try: 
+            import pigpio 
+            self.PIGPIO_AVAILABLE = True 
+        except ImportError: 
+            self.PIGPIO_AVAILABLE = False
+            
+        if self.PIGPIO_AVAILABLE: # self.gpioにアクセスするためのインスタンスを作成します
+            self.gpio = pigpio.pi() 
+        else: 
+            self.gpio = _GPIO()
+
         self.leftGPIO1          = 24
         self.leftGPIO2          = 18
         self.rightGPIO1         = 4
@@ -89,12 +142,11 @@ class RadioControlCar():
         self.leftLED            = 20
         self.rightLED           = 21
         self.html               = html
-        self.gpio               = pigpio.pi() # self.gpioにアクセスするためのインスタンスを作成します
-
-        self.gpio.set_mode(self.leftGPIO1, pigpio.OUTPUT)
-        self.gpio.set_mode(self.leftGPIO2, pigpio.OUTPUT)
-        self.gpio.set_mode(self.rightGPIO1, pigpio.OUTPUT)
-        self.gpio.set_mode(self.rightGPIO2, pigpio.OUTPUT)
+        
+        self.gpio.set_mode(self.leftGPIO1, self.gpio.OUTPUT)
+        self.gpio.set_mode(self.leftGPIO2, self.gpio.OUTPUT)
+        self.gpio.set_mode(self.rightGPIO1, self.gpio.OUTPUT)
+        self.gpio.set_mode(self.rightGPIO2, self.gpio.OUTPUT)
     
     def __enter__(self, *args):
         print("Content-Type: text/html\n")
@@ -103,36 +155,6 @@ class RadioControlCar():
     
     def __exit__(self, *args):
         self.gpio.stop()
-
-
-class cgi:
-    def __init__(self):
-        self.method         = os.environ.get("REQUEST_METHOD", "GET")
-        if self.method      == "GET": 
-            self.query      = os.environ.get("QUERY_STRING", "")            # GET : URL の ? 以降が QUERY_STRING に入る
-            self.params     = parse.parse_qs(self.query)                    # URL クエリ形式の文字列を辞書形式に変換
-
-        elif self.method    == "POST": 
-            length          = int(os.environ.get("CONTENT_LENGTH", 0))      # POST データの長さ(バイト数)を環境変数 CONTENT_LENGTH から取得
-            self.query      = sys.stdin.read(length)                        # 標準入力(stdin)から length バイト分URLクエリ形式の文字列を読み込み
-            self.params     = parse.parse_qs(self.query)                    # URL クエリ形式の文字列を辞書形式に変換
-        else:
-            self.query      = ""
-            self.params     = dict()
-    
-    def getlist(
-        self,
-        formName    = "direction",
-        default     = ""
-    ):
-        return self.params.get(formName, [default])
-    
-    def getvalue(
-        self,
-        formName    = "direction",
-        default     = ""
-    ):
-        return self.getlist(formName, default)[0]
 
 
 if __name__ == "__main__": 
