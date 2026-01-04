@@ -55,6 +55,8 @@ class cgitb:
     def io_set(self, logdir):
         if os.name == "nt": 
             if logdir is sys.stderr:
+                if isinstance(sys.stderr, io.TextIOWrapper): 
+                    return sys.stderr
                 sys.stderr = io.TextIOWrapper(
                     sys.stderr.buffer, 
                     encoding="UTF-8", 
