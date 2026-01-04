@@ -20,21 +20,21 @@ class cgi:
     
     def getlist(
         self,
-        formName    = "formName",
-        default     = ""
+        formName            = "formName",
+        default             = ""
     ):
         return self.params.get(formName, [default])
     
     def getvalue(
         self,
-        formName    = "formName",
-        default     = ""
+        formName            = "formName",
+        default             = ""
     ):
         return self.getlist(formName, default)[0]
 
 class _GPIO:
     def __init__(self):
-        self.OUTPUT = 0 
+        self.OUTPUT         = 0 
 
     def write(self, pin, value): 
         pass 
@@ -125,23 +125,23 @@ class RadioControlCar():
 """
     ):
         try: 
-            import pigpio 
-            self.PIGPIO_AVAILABLE = True 
-        except ImportError: 
-            self.PIGPIO_AVAILABLE = False
+            import pigpio
+            self.PIGPIO_AVAILABLE   = True 
+        except ImportError:
+            self.PIGPIO_AVAILABLE   = False
             
         if self.PIGPIO_AVAILABLE: # self.gpioにアクセスするためのインスタンスを作成します
             self.gpio = pigpio.pi() 
         else: 
             self.gpio = _GPIO()
 
-        self.leftGPIO1          = 24
-        self.leftGPIO2          = 18
-        self.rightGPIO1         = 4
-        self.rightGPIO2         = 23
-        self.leftLED            = 20
-        self.rightLED           = 21
-        self.html               = html
+        self.leftGPIO1              = 24
+        self.leftGPIO2              = 18
+        self.rightGPIO1             = 4
+        self.rightGPIO2             = 23
+        self.leftLED                = 20
+        self.rightLED               = 21
+        self.html                   = html
         
         self.gpio.set_mode(self.leftGPIO1, self.gpio.OUTPUT)
         self.gpio.set_mode(self.leftGPIO2, self.gpio.OUTPUT)
@@ -160,4 +160,9 @@ class RadioControlCar():
 if __name__ == "__main__": 
     form = cgi()
     with RadioControlCar() as rcc: 
-        rcc.control(form.getvalue("direction", default = ""))
+        rcc.control(
+            form.getvalue(
+                "direction", 
+                default = ""
+            )
+        )
