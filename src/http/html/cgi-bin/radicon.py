@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #coding:utf-8
-import cgi, cgitb
+import pycgi, pycgitb
 
 class _GPIO:
     OUTPUT                  = 0 
@@ -132,8 +132,8 @@ class RadioControlCar():
 
 
 if __name__ == "__main__": 
-    form    = cgi.FieldStorage()
-    log     = cgitb.enable()
+    form    = pycgi.FieldStorage()
+    log     = pycgitb.enable()
     with RadioControlCar() as rcc: 
         key     = form.getvalue("direction", default = "")
         log.handler(f"{key}が押されました")
